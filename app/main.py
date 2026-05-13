@@ -8,6 +8,20 @@ from .reminders import start_scheduler
 
 
 
+app.add_middleware(
+    CORSMiddleware,
+
+    allow_origins=[
+        "wallet-app-tracker.netlify.app"
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+)
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
