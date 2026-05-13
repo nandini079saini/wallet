@@ -131,3 +131,8 @@ th {
   background: #f9fafb;
   font-weight: 600;
 }
+
+canvas {
+
+  margin-top: 10px;
+}
