@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet App - Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+
+  
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <h1>Your Wallet</h1>
+      <button id="logout-btn" class="secondary">Logout</button>
+    </header>
+
+    <div class="card">
+      <h2>📊 Expense Breakdown</h2>
+      <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto;">
+        <canvas id="expenseChart"></canvas>
+      </div>
+    </div>
+
+    <!-- MONTHLY SUMMARY -->
+    <div class="card" id="summary-card">
+      <h2>Monthly Summary</h2>
+      <p><strong>Total Income:</strong> ₹<span id="total-income">0</span></p>
+      <p><strong>Total Expenses:</strong> ₹<span id="total-expenses">0</span></p>
+      <p><strong>Remaining:</strong> ₹<span id="remaining">0</span></p>
+    </div>
+
+    <!-- ADD INCOME -->
+    <div class="card">
+      <h2>Add Income</h2>
+      <form id="income-form" class="grid">
+        <label>
+          Source
+          <input type="text" id="income-source" placeholder="Salary, Side Hustle" required>
+        </label>
+
+        <label>
+          Amount
+          <input type="number" id="income-amount" step="0.01" required>
+        </label>
+
+        <label>
+          Date
+          <input type="date" id="income-date" required>
+        </label>
+
+        <button class="full-width" type="submit">Add Income</button>
+      </form>
+
+      <p id="income-message" class="message"></p>
+
+      <table id="income-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="card">
+
+    <!-- Scan receipt -->
+
+    <h2>📷 Scan Receipt</h2>
+
+    <div class="grid">
+
+        <label class="full-width">
+            Upload Receipt Image
+
+            <input
+                type="file"
+                id="receipt-file"
+                accept="image/*"
+                capture="environment"
+            >
+        </label>
+
+        <button
+            type="button"
+            onclick="scanReceipt()"
+            class="full-width"
+        >
+            Scan & Add Expense
+        </button>
+
+    </div>
+
+    <p id="scan-message" class="message"></p>
+
+</div>
+
+
+
+    <!-- ADD EXPENSE -->
+    <div class="card">
+      <h2>Add Expense</h2>
+      <form id="expense-form" class="grid">
+
+        <label>
+          Amount
+          <input type="number" id="amount" step="0.01" required>
+        </label>
+
+        <label>
+          Currency
+          <input type="text" id="currency" value="INR" required>
+        </label>
+
+        <label>
+          Category
+          <select id="category">
+            <option value="">Select category</option>
+            <option value="Food">Food</option>
+            <option value="Rent">Rent</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Bills">Bills</option>
+            <option value="Health">Health</option>
+            <option value="Education">Education</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+
+        <label>
+          Date
+          <input type="date" id="date" required>
+        </label>
+
+        <label class="full-width">
+          Description
+          <input type="text" id="description" placeholder="Notes (optional)">
+        </label>
+
+        <button type="submit" class="full-width">Add Expense</button>
+      </form>
+
+      <p id="expense-message" class="message"></p>
+    </div>
+
+    <!-- EXPENSE LIST -->
+    <div class="card">
+      <h2>Your Expenses</h2>
+
+      <table id="expenses-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <p id="expenses-empty" class="message"></p>
+    </div>
+
+    <!-- BILLS -->
+    <div class="card">
+      <h2>Bills (Monthly)</h2>
+
+      <form id="bill-form" class="grid">
+        <label>
+          Bill name
+          <input type="text" id="bill-name" placeholder="Rent, Wifi, Netflix..." required>
+        </label>
+
+        <label>
+          Amount
+          <input type="number" id="bill-amount" step="0.01" required>
+        </label>
+
+        <label>
+          Due day
+          <input type="number" id="bill-due-day" min="1" max="31" placeholder="e.g. 5" required>
+        </label>
+
+        <button type="submit" class="full-width">Add Bill</button>
+      </form>
+
+      <p id="bill-message" class="message"></p>
+
+      <table id="bills-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Due day</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <p id="bills-empty" class="message"></p>
+    </div>
+
+  </div>
+
+  <!-- SCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+    const token = localStorage.getItem("access_token");
+
+    if (!token) window.location.href = "index.html";
+
+    const headersAuthJson = {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+
+    /* ---------- LOGOUT ---------- */
+    document.getElementById("logout-btn").onclick = () => {
+      localStorage.removeItem("access_token");
+      window.location.href = "index.html";
+    };
+
+    /* ---------- SUMMARY ---------- */
+    async function loadSummary() {
+      try {
+        const [incRes, expRes] = await Promise.all([
+          fetch(`${API_BASE}/income/`, { headers: { "Authorization": `Bearer ${token}` } }),
+          fetch(`${API_BASE}/expenses/`, { headers: { "Authorization": `Bearer ${token}` } }),
+        ]);
+
+        if (incRes.status === 401 || expRes.status === 401) {
+          localStorage.removeItem("access_token");
+          window.location.href = "index.html";
+          return;
+        }
+
+        const incomes = await incRes.json();
+        const expenses = await expRes.json();
+
+        const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const remaining = totalIncome - totalExpenses;
+
+        document.getElementById("total-income").textContent = totalIncome.toFixed(2);
+        document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+        document.getElementById("remaining").textContent = remaining.toFixed(2);
+
+      } catch (err) {
+        console.error("Summary error:", err);
+      }
+    }
+
+    
+
+    /* ---------- LOAD INCOME ---------- */
+    async function loadIncome() {
+      const tbody = document.querySelector("#income-table tbody");
+      tbody.innerHTML = "";
+
+      try {
+        const res = await fetch(`${API_BASE}/income/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        data.forEach(inc => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${inc.source}</td>
+            <td>${inc.amount}</td>
+            <td>${inc.date}</td>
+            <td><button class="danger small income-delete-btn" data-id="${inc.id}">Delete</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll(".income-delete-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            await fetch(`${API_BASE}/income/${btn.dataset.id}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            loadIncome();
+            loadSummary();
+            loadExpenseChart();
+          });
+        });
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById("income-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const body = {
+        source: document.getElementById("income-source").value,
+        amount: parseFloat(document.getElementById("income-amount").value),
+        date: document.getElementById("income-date").value,
+      };
+
+      const res = await fetch(`${API_BASE}/income/`, {
+        method: "POST",
+        headers: headersAuthJson,
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        document.getElementById("income-message").textContent = "Income added!";
+        loadIncome();
+        loadSummary();
+        document.getElementById("income-form").reset();
+      }
+    });
+    /* ---------- PIE CHART ---------- */
+    let expenseChart;
+
+async function loadExpenseChart() {
+  try {
+    const res = await fetch(`${API_BASE}/expenses/`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const expenses = await res.json();
+
+    // Check FIRST before drawing anything
+    if (expenses.length === 0) {
+      if (expenseChart) {
+        expenseChart.destroy();
+        expenseChart = null;
+      }
+      document.getElementById("expenseChart")
+        .parentElement.innerHTML =
+        "<p style='text-align:center;color:#888'>No expenses to display yet.</p>";
+      return;
+    }
+
+    // Group expenses by category
+    const categoryTotals = {};
+
+    expenses.forEach(exp => {
+      const category = exp.category || "Other";
+      if (!categoryTotals[category]) {
+        categoryTotals[category] = 0;
+      }
+      categoryTotals[category] += exp.amount;
+    });
+
+    // Prepare chart data
+    const labels = Object.keys(categoryTotals);
+    const values = Object.values(categoryTotals);
+
+    const ctx = document
+      .getElementById("expenseChart")
+      .getContext("2d");
+
+    // Destroy old chart before redraw
+    if (expenseChart) {
+      expenseChart.destroy();
+    }
+
+    expenseChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: [
+            "#FF6384", "#36A2EB", "#FFCE56",
+            "#4BC0C0", "#9966FF", "#FF9F40",
+            "#8BC34A", "#E91E63", "#795548"
+          ],
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { position: "bottom" }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error("Chart loading error:", err);
+  }
+}
+
+    /* ---------- LOAD EXPENSES ---------- */
+    async function loadExpenses() {
+      const tbody = document.querySelector("#expenses-table tbody");
+      const emptyMsg = document.getElementById("expenses-empty");
+
+      tbody.innerHTML = "";
+      emptyMsg.textContent = "";
+
+      try {
+        const res = await fetch(`${API_BASE}/expenses/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (data.length === 0) {
+          emptyMsg.textContent = "No expenses yet. Add one above.";
+          return;
+        }
+
+        data.forEach(exp => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${exp.date}</td>
+            <td>${exp.amount}</td>
+            <td>${exp.currency}</td>
+            <td>${exp.category || ""}</td>
+            <td>${exp.description || ""}</td>
+            <td><button class="danger small delete-btn" data-id="${exp.id}">Delete</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const res = await fetch(`${API_BASE}/expenses/${btn.dataset.id}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+              loadExpenses();
+              loadSummary();   // update summary
+              loadExpenseChart();
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error(err);
+        emptyMsg.textContent = "Failed to load expenses.";
+      }
+    }
+
+    /* ---------- ADD EXPENSE ---------- */
+    document.getElementById("expense-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const body = {
+        amount: parseFloat(document.getElementById("amount").value),
+        currency: document.getElementById("currency").value.trim() || "INR",
+        category: document.getElementById("category").value || null,
+        date: document.getElementById("date").value,
+        description: document.getElementById("description").value.trim() || null,
+      };
+
+      const res = await fetch(`${API_BASE}/expenses/`, {
+        method: "POST",
+        headers: headersAuthJson,
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("expense-message").textContent = "Expense added!";
+        loadExpenses();
+        loadSummary();   // update summary
+        document.getElementById("expense-form").reset();
+        document.getElementById("date").value = new Date().toISOString().slice(0, 10);
+      }
+    });
+
+    /* ---------- RECEIPT ---------- */
+
+    async function scanReceipt() {
+
+    const fileInput =
+        document.getElementById("receipt-file");
+
+    const msg =
+        document.getElementById("scan-message");
+
+    const file = fileInput.files[0];
+
+    if (!file) {
+
+        msg.textContent =
+            "Please select a receipt image first.";
+
+        msg.className = "message error";
+
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    msg.textContent = "Scanning receipt...";
+
+    try {
+
+        const res = await fetch(
+            `${API_BASE}/ocr/scan`,
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                },
+
+                body: formData,
+            }
+        );
+
+        const data = await res.json();
+
+        if (res.ok) {
+
+            msg.textContent =
+                `✅ Added ₹${data.amount} under "${data.category}"`;
+
+            msg.className = "message success";
+
+            // Refresh expenses table
+            loadExpenses();
+
+            // Refresh monthly summary
+            loadSummary();
+
+            loadExpenseChart();
+
+            // Clear file input
+            fileInput.value = "";
+
+        } else {
+
+            msg.textContent =
+                data.detail || "OCR scan failed.";
+
+            msg.className = "message error";
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        msg.textContent =
+            "Network error during OCR scan.";
+
+        msg.className = "message error";
+    }
+}
+
+    /* ---------- BILLS ---------- */
+    async function loadBills() {
+      const tbody = document.querySelector("#bills-table tbody");
+      const emptyMsg = document.getElementById("bills-empty");
+
+      tbody.innerHTML = "";
+      emptyMsg.textContent = "";
+
+      try {
+        const res = await fetch(`${API_BASE}/bills/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (data.length === 0) {
+          emptyMsg.textContent = "No bills yet. Add one above.";
+          return;
+        }
+
+        data.forEach(bill => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${bill.name}</td>
+            <td>${bill.amount}</td>
+            <td>${bill.due_day}</td>
+            <td><button class="danger small bill-delete-btn" data-id="${bill.id}">Delete</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll(".bill-delete-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            await fetch(`${API_BASE}/bills/${btn.dataset.id}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+            loadBills();
+          });
+        });
+
+      } catch (err) {
+        console.error(err);
+        emptyMsg.textContent = "Failed to load bills.";
+      }
+    }
+
+    document.getElementById("bill-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const body = {
+        name: document.getElementById("bill-name").value.trim(),
+        amount: parseFloat(document.getElementById("bill-amount").value),
+        due_day: parseInt(document.getElementById("bill-due-day").value),
+      };
+
+      const res = await fetch(`${API_BASE}/bills/`, {
+        method: "POST",
+        headers: headersAuthJson,
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("bill-message").textContent = "Bill added!";
+        loadBills();
+        document.getElementById("bill-form").reset();
+      }
+    });
+
+    /* ---------- INITIAL LOAD ---------- */
+    loadIncome();
+    loadExpenses();
+    loadBills();
+    loadSummary();
+    loadExpenseChart();
+  </script>
+
+</body>
+</html>
