@@ -31,6 +31,14 @@
       <p><strong>Remaining:</strong> ₹<span id="remaining">0</span></p>
     </div>
 
+    <!-- BAR CHART -->
+    <div class="card">
+      <h2>📈 Income vs Expenses vs Savings</h2>
+      <div style="position: relative; width: 100%; max-width: 500px; margin: 0 auto;">
+        <canvas id="barChart" height="250"></canvas>
+      </div>
+    </div>
+
     <!-- ADD INCOME -->
     <div class="card">
       <h2>Add Income</h2>
@@ -310,6 +318,81 @@
       }
     }
 
+
+    /* ─────────────────────────────────────────
+       COMPARE BAR CHART
+    ───────────────────────────────────────── */
+    let barChart;
+    async function loadBarChart() {
+      try {
+        const [incRes, expRes] = await Promise.all([
+          fetch(`${API_BASE}/income/`,   { headers: { "Authorization": `Bearer ${token}` } }),
+          fetch(`${API_BASE}/expenses/`, { headers: { "Authorization": `Bearer ${token}` } }),
+        ]);
+
+        const incomes  = await incRes.json();
+        const expenses = await expRes.json();
+
+        const totalIncome   = incomes.reduce((sum, i) => sum + i.amount, 0);
+        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const totalSavings  = Math.max(0, totalIncome - totalExpenses);
+
+        const ctx = document.getElementById("barChart").getContext("2d");
+
+        if (barChart) barChart.destroy();
+
+        barChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Income", "Expenses", "Savings"],
+            datasets: [{
+              label: "Amount (₹)",
+              data: [totalIncome, totalExpenses, totalSavings],
+              backgroundColor: ["#10B981", "#EF4444", "#6366F1"],
+              borderColor:     ["#059669", "#DC2626", "#4F46E5"],
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#1E293B",
+                titleColor: "white",
+                bodyColor: "white",
+                padding: 12,
+                cornerRadius: 10,
+                callbacks: {
+                  label: ctx => ` ₹${ctx.parsed.y.toFixed(2)}`
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: "#374151", font: { size: 14 } },
+                grid:  { display: false },
+              },
+              y: {
+                ticks: {
+                  color: "#374151",
+                  callback: val => `₹${val}`
+                },
+                grid: { color: "#e5e7eb" },
+                beginAtZero: true,
+              }
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error("Bar chart error:", err);
+      }
+    }
+
     /* ─────────────────────────────────────────
        INCOME — load
     ───────────────────────────────────────── */
@@ -343,6 +426,7 @@
             loadIncome();
             loadSummary();
             loadExpenseChart();
+            loadBarChart();
           });
         });
 
@@ -380,6 +464,7 @@
           document.getElementById("income-form").reset();
           loadIncome();
           loadSummary();
+          loadBarChart();
         } else {
           const data = await res.json();
           msg.textContent = data.detail || "Failed to add income.";
@@ -435,6 +520,7 @@
               loadExpenses();
               loadSummary();
               loadExpenseChart();
+              loadBarChart();
             }
           });
         });
@@ -481,6 +567,7 @@
           loadExpenses();
           loadSummary();
           loadExpenseChart();
+          loadBarChart();
         } else {
           const data = await res.json();
           msg.textContent = data.detail || "Failed to add expense.";
@@ -528,6 +615,7 @@
           loadExpenses();
           loadSummary();
           loadExpenseChart();
+          loadBarChart();
         } else {
           msg.textContent = data.detail || "OCR scan failed.";
           msg.className = "message error";
@@ -637,6 +725,7 @@
     loadExpenses();
     loadBills();
     loadExpenseChart();
+    loadBarChart();
 
   </script>
 </body>
