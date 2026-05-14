@@ -1,4 +1,3 @@
-'''hello'''
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 import re
