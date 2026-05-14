@@ -1,9 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
-from PIL import Image
-import pytesseract
-import io
 import re
+import requests
+import os
 from datetime import datetime, date
 
 from ..deps import get_db, get_current_user
@@ -11,10 +10,7 @@ from ..models import Expense
 
 router = APIRouter(prefix="/ocr", tags=["OCR"])
 
-# WINDOWS TESSERACT PATH
-pytesseract.pytesseract.tesseract_cmd = (
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-)
+
 
 # -----------------------------
 # CATEGORY KEYWORDS
@@ -66,22 +62,40 @@ CATEGORY_KEYWORDS = {
 
 def extract_text(image_bytes: bytes) -> str:
 
-    image = Image.open(io.BytesIO(image_bytes))
+    api_key = os.getenv("OCR_SPACE_API_KEY")
+    if not api_key:
+        raise Exception("OCR_SPACE_API_KEY missing in .env")
 
-    # Improve OCR quality
-    image = image.convert("L")
+    response = requests.post(
 
-    width, height = image.size
+        "https://api.ocr.space/parse/image",
 
-    if width < 1000:
-        image = image.resize(
-            (width * 2, height * 2)
+        files={
+            "filename": ("receipt.jpg", image_bytes)
+        },
+
+        data={
+            "apikey": api_key,
+            "language": "eng",
+            "isOverlayRequired": False,
+            "OCREngine": 2,
+        },
+        timeout=30,
+    )
+
+    result = response.json()
+
+    if result.get("IsErroredOnProcessing"):
+        raise Exception(
+            result.get("ErrorMessage", "OCR failed")
         )
 
-    text = pytesseract.image_to_string(
-        image,
-        config="--psm 6"
-    )
+    parsed_results = result.get("ParsedResults")
+
+    if not parsed_results:
+        raise Exception("No OCR text detected")
+
+    text = parsed_results[0].get("ParsedText", "")
 
     return text
 
