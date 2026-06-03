@@ -4,8 +4,7 @@ A full-stack personal finance tracker that allows users to manage expenses, inco
 
 ## Live Demo
 
-Frontend: https://wallet-app-tracker.netlify.app
-Backend: https://wallet-backend-op4d.onrender.com
+https://wallet-app-tracker.netlify.app
 
 
 ## Features
