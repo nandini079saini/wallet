@@ -1,505 +1,628 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Wallet App - Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wallet — Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
 
-<body>
-  <div class="container">
-
+  <body>
     <!-- HEADER -->
     <header class="header">
       <h1>Your Wallet</h1>
       <button id="logout-btn" class="secondary">Logout</button>
     </header>
+    <div class="perforation"></div>
 
-    <!-- EXPENSE CHART -->
-    <div class="card">
-      <h2>📊 Expense Breakdown</h2>
-      <div id="chart-wrapper" style="position: relative; width: 100%; max-width: 400px; margin: 0 auto;">
-        <canvas id="expenseChart" height="250"></canvas>
+    <div class="container">
+      <!-- MONTHLY SUMMARY -->
+      <div class="card" id="summary-card">
+        <h2>Monthly summary</h2>
+        <p>
+          <strong>Total income</strong>
+          <span>₹<span id="total-income">0</span></span>
+        </p>
+        <p>
+          <strong>Total expenses</strong>
+          <span>₹<span id="total-expenses">0</span></span>
+        </p>
+        <p>
+          <strong>Remaining</strong> <span>₹<span id="remaining">0</span></span>
+        </p>
+      </div>
+
+      <!-- EXPENSE CHART -->
+      <div class="card">
+        <h2>Expense breakdown</h2>
+        <div
+          id="chart-wrapper"
+          style="
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+          "
+        >
+          <canvas id="expenseChart" height="250"></canvas>
+        </div>
+      </div>
+
+      <!-- BAR CHART -->
+      <div class="card">
+        <h2>Income vs. expenses vs. savings</h2>
+        <div
+          id="bar-chart-wrapper"
+          style="
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+          "
+        >
+          <canvas id="barChart" height="250"></canvas>
+        </div>
+      </div>
+
+      <!-- EXPENSE LIST -->
+      <div class="card">
+        <h2>Your expenses</h2>
+        <table id="expenses-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Currency</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="expenses-empty" class="message"></p>
+      </div>
+
+      <!-- ADD INCOME -->
+      <div class="card">
+        <h2>Add income</h2>
+        <form id="income-form" class="grid">
+          <label>
+            Source
+            <input
+              type="text"
+              id="income-source"
+              placeholder="Salary, Side Hustle"
+              required
+            />
+          </label>
+          <label>
+            Amount
+            <input
+              type="number"
+              id="income-amount"
+              step="0.01"
+              placeholder="0.00"
+              required
+            />
+          </label>
+          <label>
+            Date
+            <input type="date" id="income-date" required />
+          </label>
+          <button class="full-width" type="submit">Add income</button>
+        </form>
+        <p id="income-message" class="message"></p>
+        <table id="income-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <!-- ADD EXPENSE -->
+      <div class="card">
+        <h2>Add expense</h2>
+        <form id="expense-form" class="grid">
+          <label>
+            Amount
+            <input
+              type="number"
+              id="amount"
+              step="0.01"
+              placeholder="0.00"
+              required
+            />
+          </label>
+          <label>
+            Currency
+            <input type="text" id="currency" value="INR" required />
+          </label>
+          <label>
+            Category
+            <select id="category">
+              <option value="">Select category</option>
+              <option value="Food">Food</option>
+              <option value="Rent">Rent</option>
+              <option value="Transport">Transport</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Bills">Bills</option>
+              <option value="Health">Health</option>
+              <option value="Education">Education</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>
+            Date
+            <input type="date" id="date" required />
+          </label>
+          <label class="full-width">
+            Description
+            <input
+              type="text"
+              id="description"
+              placeholder="Notes (optional)"
+            />
+          </label>
+          <button type="submit" class="full-width">Add expense</button>
+        </form>
+        <p id="expense-message" class="message"></p>
+      </div>
+
+      <!-- SCAN RECEIPT -->
+      <div class="card">
+        <h2>Scan receipt</h2>
+        <div class="grid">
+          <label class="full-width">
+            Upload receipt image
+            <input
+              type="file"
+              id="receipt-file"
+              accept="image/*"
+              capture="environment"
+            />
+          </label>
+          <button type="button" id="scan-btn" class="full-width">
+            Scan &amp; add expense
+          </button>
+        </div>
+        <p id="scan-message" class="message"></p>
+      </div>
+
+      <!-- BILLS -->
+      <div class="card">
+        <h2>Bills (monthly)</h2>
+        <form id="bill-form" class="grid">
+          <label>
+            Bill name
+            <input
+              type="text"
+              id="bill-name"
+              placeholder="Rent, Wifi, Netflix..."
+              required
+            />
+          </label>
+          <label>
+            Amount
+            <input
+              type="number"
+              id="bill-amount"
+              step="0.01"
+              placeholder="0.00"
+              required
+            />
+          </label>
+          <label>
+            Due day
+            <input
+              type="number"
+              id="bill-due-day"
+              min="1"
+              max="31"
+              placeholder="e.g. 5"
+              required
+            />
+          </label>
+          <button type="submit" class="full-width">Add bill</button>
+        </form>
+        <p id="bill-message" class="message"></p>
+        <table id="bills-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Amount</th>
+              <th>Due day</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="bills-empty" class="message"></p>
       </div>
     </div>
 
-    <!-- MONTHLY SUMMARY -->
-    <div class="card" id="summary-card">
-      <h2>Monthly Summary</h2>
-      <p><strong>Total Income:</strong> ₹<span id="total-income">0</span></p>
-      <p><strong>Total Expenses:</strong> ₹<span id="total-expenses">0</span></p>
-      <p><strong>Remaining:</strong> ₹<span id="remaining">0</span></p>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const API_BASE = "https://wallet-backend-op4d.onrender.com";
+      const token = localStorage.getItem("access_token");
 
-    <!-- BAR CHART -->
-    <div class="card">
-      <h2>📈 Income vs Expenses vs Savings</h2>
-      <div style="position: relative; width: 100%; max-width: 500px; margin: 0 auto;">
-        <canvas id="barChart" height="250"></canvas>
-      </div>
-    </div>
+      if (!token) window.location.href = "index.html";
 
-    <!-- ADD INCOME -->
-    <div class="card">
-      <h2>Add Income</h2>
-      <form id="income-form" class="grid">
-        <label>
-          Source
-          <input type="text" id="income-source" placeholder="Salary, Side Hustle" required>
-        </label>
-        <label>
-          Amount
-          <input type="number" id="income-amount" step="0.01" required>
-        </label>
-        <label>
-          Date
-          <input type="date" id="income-date" required>
-        </label>
-        <button class="full-width" type="submit">Add Income</button>
-      </form>
-      <p id="income-message" class="message"></p>
-      <table id="income-table">
-        <thead>
-          <tr>
-            <th>Source</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      const headersAuthJson = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
 
-    <!-- SCAN RECEIPT -->
-    <div class="card">
-      <h2>📷 Scan Receipt</h2>
-      <div class="grid">
-        <label class="full-width">
-          Upload Receipt Image
-          <input type="file" id="receipt-file" accept="image/*" capture="environment">
-        </label>
-        <button type="button" id="scan-btn" class="full-width">Scan & Add Expense</button>
-      </div>
-      <p id="scan-message" class="message"></p>
-    </div>
-
-    <!-- ADD EXPENSE -->
-    <div class="card">
-      <h2>Add Expense</h2>
-      <form id="expense-form" class="grid">
-        <label>
-          Amount
-          <input type="number" id="amount" step="0.01" required>
-        </label>
-        <label>
-          Currency
-          <input type="text" id="currency" value="INR" required>
-        </label>
-        <label>
-          Category
-          <select id="category">
-            <option value="">Select category</option>
-            <option value="Food">Food</option>
-            <option value="Rent">Rent</option>
-            <option value="Transport">Transport</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Bills">Bills</option>
-            <option value="Health">Health</option>
-            <option value="Education">Education</option>
-            <option value="Other">Other</option>
-          </select>
-        </label>
-        <label>
-          Date
-          <input type="date" id="date" required>
-        </label>
-        <label class="full-width">
-          Description
-          <input type="text" id="description" placeholder="Notes (optional)">
-        </label>
-        <button type="submit" class="full-width">Add Expense</button>
-      </form>
-      <p id="expense-message" class="message"></p>
-    </div>
-
-    <!-- EXPENSE LIST -->
-    <div class="card">
-      <h2>Your Expenses</h2>
-      <table id="expenses-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Currency</th>
-            <th>Category</th>
-            <th>Description</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <p id="expenses-empty" class="message"></p>
-    </div>
-
-    <!-- BILLS -->
-    <div class="card">
-      <h2>Bills (Monthly)</h2>
-      <form id="bill-form" class="grid">
-        <label>
-          Bill name
-          <input type="text" id="bill-name" placeholder="Rent, Wifi, Netflix..." required>
-        </label>
-        <label>
-          Amount
-          <input type="number" id="bill-amount" step="0.01" required>
-        </label>
-        <label>
-          Due day
-          <input type="number" id="bill-due-day" min="1" max="31" placeholder="e.g. 5" required>
-        </label>
-        <button type="submit" class="full-width">Add Bill</button>
-      </form>
-      <p id="bill-message" class="message"></p>
-      <table id="bills-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Amount</th>
-            <th>Due day</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <p id="bills-empty" class="message"></p>
-    </div>
-
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const API_BASE = "https://wallet-backend-op4d.onrender.com";
-    const token = localStorage.getItem("access_token");
-
-    if (!token) window.location.href = "index.html";
-
-    const headersAuthJson = {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        LOGOUT
     ───────────────────────────────────────── */
-    document.getElementById("logout-btn").onclick = () => {
-      localStorage.removeItem("access_token");
-      window.location.href = "index.html";
-    };
+      document.getElementById("logout-btn").onclick = () => {
+        localStorage.removeItem("access_token");
+        window.location.href = "index.html";
+      };
 
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        SUMMARY
     ───────────────────────────────────────── */
-    async function loadSummary() {
-      try {
-        const [incRes, expRes] = await Promise.all([
-          fetch(`${API_BASE}/income/`,   { headers: { "Authorization": `Bearer ${token}` } }),
-          fetch(`${API_BASE}/expenses/`, { headers: { "Authorization": `Bearer ${token}` } }),
-        ]);
+      async function loadSummary() {
+        try {
+          const [incRes, expRes] = await Promise.all([
+            fetch(`${API_BASE}/income/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${API_BASE}/expenses/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
-        if (incRes.status === 401 || expRes.status === 401) {
-          localStorage.removeItem("access_token");
-          window.location.href = "index.html";
-          return;
+          if (incRes.status === 401 || expRes.status === 401) {
+            localStorage.removeItem("access_token");
+            window.location.href = "index.html";
+            return;
+          }
+
+          const incomes = await incRes.json();
+          const expenses = await expRes.json();
+
+          const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+          const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+          const remaining = totalIncome - totalExpenses;
+
+          document.getElementById("total-income").textContent =
+            totalIncome.toFixed(2);
+          document.getElementById("total-expenses").textContent =
+            totalExpenses.toFixed(2);
+          document.getElementById("remaining").textContent =
+            remaining.toFixed(2);
+        } catch (err) {
+          console.error("Summary error:", err);
         }
-
-        const incomes  = await incRes.json();
-        const expenses = await expRes.json();
-
-        const totalIncome   = incomes.reduce((sum, i) => sum + i.amount, 0);
-        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const remaining     = totalIncome - totalExpenses;
-
-        document.getElementById("total-income").textContent   = totalIncome.toFixed(2);
-        document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
-        document.getElementById("remaining").textContent      = remaining.toFixed(2);
-      } catch (err) {
-        console.error("Summary error:", err);
       }
-    }
 
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        PIE / DOUGHNUT CHART
     ───────────────────────────────────────── */
-    let expenseChart;
+      let expenseChart;
 
-    async function loadExpenseChart() {
-      try {
-        const res = await fetch(`${API_BASE}/expenses/`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+      async function loadExpenseChart() {
+        try {
+          const res = await fetch(`${API_BASE}/expenses/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
-        const expenses = await res.json();
+          const expenses = await res.json();
 
-        if (expenses.length === 0) {
-          if (expenseChart) {
-            expenseChart.destroy();
-            expenseChart = null;
-          }
-          document.getElementById("chart-wrapper").innerHTML =
-            "<p style='text-align:center;color:#888'>No expenses to display yet.</p>";
-          return;
-        }
-
-        // Group by category
-        const categoryTotals = {};
-        expenses.forEach(exp => {
-          const cat = exp.category || "Other";
-          categoryTotals[cat] = (categoryTotals[cat] || 0) + exp.amount;
-        });
-
-        const labels = Object.keys(categoryTotals);
-        const values = Object.values(categoryTotals);
-
-        // Re-create canvas if it was replaced by the empty message
-        let canvas = document.getElementById("expenseChart");
-        if (!canvas) {
-          canvas = document.createElement("canvas");
-          canvas.id = "expenseChart";
-          canvas.height = 250;
-          document.getElementById("chart-wrapper").innerHTML = "";
-          document.getElementById("chart-wrapper").appendChild(canvas);
-        }
-
-        const ctx = canvas.getContext("2d");
-
-        if (expenseChart) expenseChart.destroy();
-
-        expenseChart = new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels,
-            datasets: [{
-              data: values,
-              backgroundColor: [
-                "#6366F1","#8B5CF6","#EC4899","#F59E0B",
-                "#10B981","#06B6D4","#EF4444","#84CC16","#14B8A6"
-              ],
-              borderColor: "#0F172A",
-              borderWidth: 3,
-              hoverOffset: 18,
-              borderRadius: 8,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            cutout: "58%",
-            animation: { animateRotate: true, animateScale: true },
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: { color: "#374151", padding: 20, font: { size: 14 } }
-              },
-              tooltip: {
-                backgroundColor: "#1E293B",
-                titleColor: "white",
-                bodyColor: "white",
-                padding: 12,
-                cornerRadius: 10,
-              }
+          if (expenses.length === 0) {
+            if (expenseChart) {
+              expenseChart.destroy();
+              expenseChart = null;
             }
+            document.getElementById("chart-wrapper").innerHTML =
+              "<p style='text-align:center;color:#6C7261;font-family:\"IBM Plex Mono\",monospace;font-size:13px;padding:24px 0'>No expenses to display yet.</p>";
+            return;
           }
-        });
 
-      } catch (err) {
-        console.error("Chart error:", err);
+          // Group by category
+          const categoryTotals = {};
+          expenses.forEach((exp) => {
+            const cat = exp.category || "Other";
+            categoryTotals[cat] = (categoryTotals[cat] || 0) + exp.amount;
+          });
+
+          const labels = Object.keys(categoryTotals);
+          const values = Object.values(categoryTotals);
+
+          // Re-create canvas if it was replaced by the empty message
+          let canvas = document.getElementById("expenseChart");
+          if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "expenseChart";
+            canvas.height = 250;
+            document.getElementById("chart-wrapper").innerHTML = "";
+            document.getElementById("chart-wrapper").appendChild(canvas);
+          }
+
+          const ctx = canvas.getContext("2d");
+
+          if (expenseChart) expenseChart.destroy();
+
+          expenseChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels,
+              datasets: [
+                {
+                  data: values,
+                  backgroundColor: [
+                    "#1F4D3A",
+                    "#A8792C",
+                    "#9B3A2C",
+                    "#3A6552",
+                    "#C9A24B",
+                    "#5C7A6A",
+                    "#7A2E22",
+                    "#B8A968",
+                    "#4E7C63",
+                  ],
+                  borderColor: "#F4F3E8",
+                  borderWidth: 3,
+                  hoverOffset: 18,
+                  borderRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              cutout: "58%",
+              animation: { animateRotate: true, animateScale: true },
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    color: "#232821",
+                    padding: 20,
+                    font: { size: 13, family: "IBM Plex Mono" },
+                  },
+                },
+                tooltip: {
+                  backgroundColor: "#1F4D3A",
+                  titleColor: "#F4F3E8",
+                  bodyColor: "#F4F3E8",
+                  padding: 12,
+                  cornerRadius: 4,
+                  titleFont: { family: "IBM Plex Mono" },
+                  bodyFont: { family: "IBM Plex Mono" },
+                },
+              },
+            },
+          });
+        } catch (err) {
+          console.error("Chart error:", err);
+        }
       }
-    }
 
-
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        COMPARE BAR CHART
     ───────────────────────────────────────── */
-    let barChart;
-    async function loadBarChart() {
-      try {
-        const [incRes, expRes] = await Promise.all([
-          fetch(`${API_BASE}/income/`,   { headers: { "Authorization": `Bearer ${token}` } }),
-          fetch(`${API_BASE}/expenses/`, { headers: { "Authorization": `Bearer ${token}` } }),
-        ]);
+      let barChart;
+      async function loadBarChart() {
+        try {
+          const [incRes, expRes] = await Promise.all([
+            fetch(`${API_BASE}/income/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${API_BASE}/expenses/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
-        const incomes  = await incRes.json();
-        const expenses = await expRes.json();
+          const incomes = await incRes.json();
+          const expenses = await expRes.json();
 
-        const totalIncome   = incomes.reduce((sum, i) => sum + i.amount, 0);
-        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const totalSavings  = Math.max(0, totalIncome - totalExpenses);
+          const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+          const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+          const totalSavings = Math.max(0, totalIncome - totalExpenses);
 
-        const ctx = document.getElementById("barChart").getContext("2d");
+          const wrapper = document.getElementById("bar-chart-wrapper");
 
-        if (barChart) barChart.destroy();
-
-        barChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: ["Income", "Expenses", "Savings"],
-            datasets: [{
-              label: "Amount (₹)",
-              data: [totalIncome, totalExpenses, totalSavings],
-              backgroundColor: ["#10B981", "#EF4444", "#6366F1"],
-              borderColor:     ["#059669", "#DC2626", "#4F46E5"],
-              borderWidth: 2,
-              borderRadius: 8,
-              borderSkipped: false,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: "#1E293B",
-                titleColor: "white",
-                bodyColor: "white",
-                padding: 12,
-                cornerRadius: 10,
-                callbacks: {
-                  label: ctx => ` ₹${ctx.parsed.y.toFixed(2)}`
-                }
-              }
-            },
-            scales: {
-              x: {
-                ticks: { color: "#374151", font: { size: 14 } },
-                grid:  { display: false },
-              },
-              y: {
-                ticks: {
-                  color: "#374151",
-                  callback: val => `₹${val}`
-                },
-                grid: { color: "#e5e7eb" },
-                beginAtZero: true,
-              }
+          if (totalIncome === 0 && totalExpenses === 0) {
+            if (barChart) {
+              barChart.destroy();
+              barChart = null;
             }
+            wrapper.innerHTML =
+              "<p style='text-align:center;color:#6C7261;font-family:\"IBM Plex Mono\",monospace;font-size:13px;padding:24px 0'>No income or expenses to display yet.</p>";
+            return;
           }
-        });
 
-      } catch (err) {
-        console.error("Bar chart error:", err);
+          // Re-create canvas if it was replaced by the empty message
+          let canvas = document.getElementById("barChart");
+          if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "barChart";
+            canvas.height = 250;
+            wrapper.innerHTML = "";
+            wrapper.appendChild(canvas);
+          }
+
+          const ctx = canvas.getContext("2d");
+
+          if (barChart) barChart.destroy();
+
+          barChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["Income", "Expenses", "Savings"],
+              datasets: [
+                {
+                  label: "Amount (₹)",
+                  data: [totalIncome, totalExpenses, totalSavings],
+                  backgroundColor: ["#2F6F4E", "#9B3A2C", "#A8792C"],
+                  borderColor: ["#1F4D3A", "#7A2E22", "#8A6423"],
+                  borderWidth: 2,
+                  borderRadius: 4,
+                  borderSkipped: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: "#1F4D3A",
+                  titleColor: "#F4F3E8",
+                  bodyColor: "#F4F3E8",
+                  padding: 12,
+                  cornerRadius: 4,
+                  titleFont: { family: "IBM Plex Mono" },
+                  bodyFont: { family: "IBM Plex Mono" },
+                  callbacks: {
+                    label: (ctx) => ` ₹${ctx.parsed.y.toFixed(2)}`,
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: "#232821",
+                    font: { size: 13, family: "IBM Plex Mono" },
+                  },
+                  grid: { display: false },
+                },
+                y: {
+                  ticks: {
+                    color: "#6C7261",
+                    font: { family: "IBM Plex Mono" },
+                    callback: (val) => `₹${val}`,
+                  },
+                  grid: { color: "#DBDBC9" },
+                  beginAtZero: true,
+                },
+              },
+            },
+          });
+        } catch (err) {
+          console.error("Bar chart error:", err);
+        }
       }
-    }
 
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        INCOME — load
     ───────────────────────────────────────── */
-    async function loadIncome() {
-      const tbody = document.querySelector("#income-table tbody");
-      tbody.innerHTML = "";
+      async function loadIncome() {
+        const tbody = document.querySelector("#income-table tbody");
+        tbody.innerHTML = "";
 
-      try {
-        const res  = await fetch(`${API_BASE}/income/`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
+        try {
+          const res = await fetch(`${API_BASE}/income/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
 
-        data.forEach(inc => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
+          data.forEach((inc) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
             <td>${inc.source}</td>
             <td>${inc.amount}</td>
             <td>${inc.date}</td>
             <td><button class="danger small income-delete-btn" data-id="${inc.id}">Delete</button></td>
           `;
-          tbody.appendChild(tr);
-        });
-
-        document.querySelectorAll(".income-delete-btn").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            await fetch(`${API_BASE}/income/${btn.dataset.id}`, {
-              method: "DELETE",
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-            loadIncome();
-            loadSummary();
-            loadExpenseChart();
-            loadBarChart();
+            tbody.appendChild(tr);
           });
-        });
 
-      } catch (err) {
-        console.error("Load income error:", err);
+          document.querySelectorAll(".income-delete-btn").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              await fetch(`${API_BASE}/income/${btn.dataset.id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              loadIncome();
+              loadSummary();
+              loadExpenseChart();
+              loadBarChart();
+            });
+          });
+        } catch (err) {
+          console.error("Load income error:", err);
+        }
       }
-    }
 
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        INCOME — add
     ───────────────────────────────────────── */
-    document.getElementById("income-form").addEventListener("submit", async e => {
-      e.preventDefault();
+      document
+        .getElementById("income-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-      const msg = document.getElementById("income-message");
-      msg.className = "message";
-      msg.textContent = "";
+          const msg = document.getElementById("income-message");
+          msg.className = "message";
+          msg.textContent = "";
 
-      const body = {
-        source: document.getElementById("income-source").value.trim(),
-        amount: parseFloat(document.getElementById("income-amount").value),
-        date:   document.getElementById("income-date").value,
-      };
+          const body = {
+            source: document.getElementById("income-source").value.trim(),
+            amount: parseFloat(document.getElementById("income-amount").value),
+            date: document.getElementById("income-date").value,
+          };
 
-      try {
-        const res = await fetch(`${API_BASE}/income/`, {
-          method: "POST",
-          headers: headersAuthJson,
-          body: JSON.stringify(body)
+          try {
+            const res = await fetch(`${API_BASE}/income/`, {
+              method: "POST",
+              headers: headersAuthJson,
+              body: JSON.stringify(body),
+            });
+
+            if (res.ok) {
+              msg.textContent = "Income added!";
+              msg.className = "message success";
+              document.getElementById("income-form").reset();
+              loadIncome();
+              loadSummary();
+              loadBarChart();
+            } else {
+              const data = await res.json();
+              msg.textContent = data.detail || "Failed to add income.";
+              msg.className = "message error";
+            }
+          } catch (err) {
+            msg.textContent = "Network error.";
+            msg.className = "message error";
+          }
         });
 
-        if (res.ok) {
-          msg.textContent = "Income added!";
-          msg.className = "message success";
-          document.getElementById("income-form").reset();
-          loadIncome();
-          loadSummary();
-          loadBarChart();
-        } else {
-          const data = await res.json();
-          msg.textContent = data.detail || "Failed to add income.";
-          msg.className = "message error";
-        }
-      } catch (err) {
-        msg.textContent = "Network error.";
-        msg.className = "message error";
-      }
-    });
-
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        EXPENSES — load
     ───────────────────────────────────────── */
-    async function loadExpenses() {
-      const tbody    = document.querySelector("#expenses-table tbody");
-      const emptyMsg = document.getElementById("expenses-empty");
+      async function loadExpenses() {
+        const tbody = document.querySelector("#expenses-table tbody");
+        const emptyMsg = document.getElementById("expenses-empty");
 
-      tbody.innerHTML  = "";
-      emptyMsg.textContent = "";
+        tbody.innerHTML = "";
+        emptyMsg.textContent = "";
 
-      try {
-        const res  = await fetch(`${API_BASE}/expenses/`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
+        try {
+          const res = await fetch(`${API_BASE}/expenses/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
 
-        if (data.length === 0) {
-          emptyMsg.textContent = "No expenses yet. Add one above.";
-          return;
-        }
+          if (data.length === 0) {
+            emptyMsg.textContent = "No expenses yet. Add one above.";
+            return;
+          }
 
-        data.forEach(exp => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
+          data.forEach((exp) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
             <td>${exp.date}</td>
             <td>${exp.amount}</td>
             <td>${exp.currency}</td>
@@ -507,226 +630,237 @@
             <td>${exp.description || ""}</td>
             <td><button class="danger small delete-btn" data-id="${exp.id}">Delete</button></td>
           `;
-          tbody.appendChild(tr);
-        });
+            tbody.appendChild(tr);
+          });
 
-        document.querySelectorAll(".delete-btn").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const res = await fetch(`${API_BASE}/expenses/${btn.dataset.id}`, {
-              method: "DELETE",
-              headers: { "Authorization": `Bearer ${token}` }
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              const res = await fetch(
+                `${API_BASE}/expenses/${btn.dataset.id}`,
+                {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
+              if (res.ok) {
+                loadExpenses();
+                loadSummary();
+                loadExpenseChart();
+                loadBarChart();
+              }
             });
+          });
+        } catch (err) {
+          console.error("Load expenses error:", err);
+          emptyMsg.textContent = "Failed to load expenses.";
+        }
+      }
+
+      /* ─────────────────────────────────────────
+       EXPENSES — add
+    ───────────────────────────────────────── */
+      // Set today's date as default
+      document.getElementById("date").value = new Date()
+        .toISOString()
+        .slice(0, 10);
+
+      document
+        .getElementById("expense-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const msg = document.getElementById("expense-message");
+          msg.className = "message";
+          msg.textContent = "";
+
+          const body = {
+            amount: parseFloat(document.getElementById("amount").value),
+            currency: document.getElementById("currency").value.trim() || "INR",
+            category: document.getElementById("category").value || null,
+            date: document.getElementById("date").value,
+            description:
+              document.getElementById("description").value.trim() || null,
+          };
+
+          try {
+            const res = await fetch(`${API_BASE}/expenses/`, {
+              method: "POST",
+              headers: headersAuthJson,
+              body: JSON.stringify(body),
+            });
+
             if (res.ok) {
+              msg.textContent = "Expense added!";
+              msg.className = "message success";
+              document.getElementById("expense-form").reset();
+              document.getElementById("date").value = new Date()
+                .toISOString()
+                .slice(0, 10);
               loadExpenses();
               loadSummary();
               loadExpenseChart();
               loadBarChart();
+            } else {
+              const data = await res.json();
+              msg.textContent = data.detail || "Failed to add expense.";
+              msg.className = "message error";
             }
-          });
+          } catch (err) {
+            msg.textContent = "Network error.";
+            msg.className = "message error";
+          }
         });
 
-      } catch (err) {
-        console.error("Load expenses error:", err);
-        emptyMsg.textContent = "Failed to load expenses.";
-      }
-    }
-
-    /* ─────────────────────────────────────────
-       EXPENSES — add
-    ───────────────────────────────────────── */
-    // Set today's date as default
-    document.getElementById("date").value = new Date().toISOString().slice(0, 10);
-
-    document.getElementById("expense-form").addEventListener("submit", async e => {
-      e.preventDefault();
-
-      const msg = document.getElementById("expense-message");
-      msg.className = "message";
-      msg.textContent = "";
-
-      const body = {
-        amount:      parseFloat(document.getElementById("amount").value),
-        currency:    document.getElementById("currency").value.trim() || "INR",
-        category:    document.getElementById("category").value || null,
-        date:        document.getElementById("date").value,
-        description: document.getElementById("description").value.trim() || null,
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/expenses/`, {
-          method: "POST",
-          headers: headersAuthJson,
-          body: JSON.stringify(body)
-        });
-
-        if (res.ok) {
-          msg.textContent = "Expense added!";
-          msg.className = "message success";
-          document.getElementById("expense-form").reset();
-          document.getElementById("date").value = new Date().toISOString().slice(0, 10);
-          loadExpenses();
-          loadSummary();
-          loadExpenseChart();
-          loadBarChart();
-        } else {
-          const data = await res.json();
-          msg.textContent = data.detail || "Failed to add expense.";
-          msg.className = "message error";
-        }
-      } catch (err) {
-        msg.textContent = "Network error.";
-        msg.className = "message error";
-      }
-    });
-
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        RECEIPT — scan
     ───────────────────────────────────────── */
-    async function scanReceipt() {
-      const fileInput = document.getElementById("receipt-file");
-      const msg       = document.getElementById("scan-message");
-      const file      = fileInput.files[0];
+      async function scanReceipt() {
+        const fileInput = document.getElementById("receipt-file");
+        const msg = document.getElementById("scan-message");
+        const file = fileInput.files[0];
 
-      msg.className = "message";
+        msg.className = "message";
 
-      if (!file) {
-        msg.textContent = "Please select a receipt image first.";
-        msg.className = "message error";
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      msg.textContent = "Scanning receipt...";
-
-      try {
-        const res  = await fetch(`${API_BASE}/ocr/scan`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}` },
-          body: formData,
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          msg.textContent = `✅ Added ₹${data.amount} under "${data.category}"`;
-          msg.className = "message success";
-          fileInput.value = "";
-          loadExpenses();
-          loadSummary();
-          loadExpenseChart();
-          loadBarChart();
-        } else {
-          msg.textContent = data.detail || "OCR scan failed.";
+        if (!file) {
+          msg.textContent = "Please select a receipt image first.";
           msg.className = "message error";
-        }
-      } catch (err) {
-        console.error(err);
-        msg.textContent = "Network error during OCR scan.";
-        msg.className = "message error";
-      }
-    }
-
-    // Attach scan button via JS (avoids inline onclick scope issues)
-    document.getElementById("scan-btn").addEventListener("click", scanReceipt);
-
-    /* ─────────────────────────────────────────
-       BILLS — load
-    ───────────────────────────────────────── */
-    async function loadBills() {
-      const tbody    = document.querySelector("#bills-table tbody");
-      const emptyMsg = document.getElementById("bills-empty");
-
-      tbody.innerHTML      = "";
-      emptyMsg.textContent = "";
-
-      try {
-        const res  = await fetch(`${API_BASE}/bills/`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-
-        if (data.length === 0) {
-          emptyMsg.textContent = "No bills yet. Add one above.";
           return;
         }
 
-        data.forEach(bill => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
+        const formData = new FormData();
+        formData.append("file", file);
+
+        msg.textContent = "Scanning receipt...";
+
+        try {
+          const res = await fetch(`${API_BASE}/ocr/scan`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            msg.textContent = `✅ Added ₹${data.amount} under "${data.category}"`;
+            msg.className = "message success";
+            fileInput.value = "";
+            loadExpenses();
+            loadSummary();
+            loadExpenseChart();
+            loadBarChart();
+          } else {
+            msg.textContent = data.detail || "OCR scan failed.";
+            msg.className = "message error";
+          }
+        } catch (err) {
+          console.error(err);
+          msg.textContent = "Network error during OCR scan.";
+          msg.className = "message error";
+        }
+      }
+
+      // Attach scan button via JS (avoids inline onclick scope issues)
+      document
+        .getElementById("scan-btn")
+        .addEventListener("click", scanReceipt);
+
+      /* ─────────────────────────────────────────
+       BILLS — load
+    ───────────────────────────────────────── */
+      async function loadBills() {
+        const tbody = document.querySelector("#bills-table tbody");
+        const emptyMsg = document.getElementById("bills-empty");
+
+        tbody.innerHTML = "";
+        emptyMsg.textContent = "";
+
+        try {
+          const res = await fetch(`${API_BASE}/bills/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+
+          if (data.length === 0) {
+            emptyMsg.textContent = "No bills yet. Add one above.";
+            return;
+          }
+
+          data.forEach((bill) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
             <td>${bill.name}</td>
             <td>${bill.amount}</td>
             <td>${bill.due_day}</td>
             <td><button class="danger small bill-delete-btn" data-id="${bill.id}">Delete</button></td>
           `;
-          tbody.appendChild(tr);
-        });
-
-        document.querySelectorAll(".bill-delete-btn").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            await fetch(`${API_BASE}/bills/${btn.dataset.id}`, {
-              method: "DELETE",
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-            loadBills();
+            tbody.appendChild(tr);
           });
-        });
 
-      } catch (err) {
-        console.error("Load bills error:", err);
-        emptyMsg.textContent = "Failed to load bills.";
+          document.querySelectorAll(".bill-delete-btn").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              await fetch(`${API_BASE}/bills/${btn.dataset.id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              loadBills();
+            });
+          });
+        } catch (err) {
+          console.error("Load bills error:", err);
+          emptyMsg.textContent = "Failed to load bills.";
+        }
       }
-    }
 
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        BILLS — add
     ───────────────────────────────────────── */
-    document.getElementById("bill-form").addEventListener("submit", async e => {
-      e.preventDefault();
+      document
+        .getElementById("bill-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-      const msg = document.getElementById("bill-message");
-      msg.className = "message";
-      msg.textContent = "";
+          const msg = document.getElementById("bill-message");
+          msg.className = "message";
+          msg.textContent = "";
 
-      const body = {
-        name:    document.getElementById("bill-name").value.trim(),
-        amount:  parseFloat(document.getElementById("bill-amount").value),
-        due_day: parseInt(document.getElementById("bill-due-day").value),
-      };
+          const body = {
+            name: document.getElementById("bill-name").value.trim(),
+            amount: parseFloat(document.getElementById("bill-amount").value),
+            due_day: parseInt(document.getElementById("bill-due-day").value),
+          };
 
-      try {
-        const res = await fetch(`${API_BASE}/bills/`, {
-          method: "POST",
-          headers: headersAuthJson,
-          body: JSON.stringify(body)
+          try {
+            const res = await fetch(`${API_BASE}/bills/`, {
+              method: "POST",
+              headers: headersAuthJson,
+              body: JSON.stringify(body),
+            });
+
+            if (res.ok) {
+              msg.textContent = "Bill added!";
+              msg.className = "message success";
+              document.getElementById("bill-form").reset();
+              loadBills();
+            } else {
+              const data = await res.json();
+              msg.textContent = data.detail || "Failed to add bill.";
+              msg.className = "message error";
+            }
+          } catch (err) {
+            msg.textContent = "Network error.";
+            msg.className = "message error";
+          }
         });
 
-        if (res.ok) {
-          msg.textContent = "Bill added!";
-          msg.className = "message success";
-          document.getElementById("bill-form").reset();
-          loadBills();
-        } else {
-          const data = await res.json();
-          msg.textContent = data.detail || "Failed to add bill.";
-          msg.className = "message error";
-        }
-      } catch (err) {
-        msg.textContent = "Network error.";
-        msg.className = "message error";
-      }
-    });
-
-    /* ─────────────────────────────────────────
+      /* ─────────────────────────────────────────
        INITIAL LOAD
     ───────────────────────────────────────── */
-    loadSummary();
-    loadIncome();
-    loadExpenses();
-    loadBills();
-    loadExpenseChart();
-    loadBarChart();
-
-  </script>
-</body>
+      loadSummary();
+      loadIncome();
+      loadExpenses();
+      loadBills();
+      loadExpenseChart();
+      loadBarChart();
+    </script>
+  </body>
 </html>

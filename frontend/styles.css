@@ -1,134 +1,498 @@
+/* ===========================================================
+   Wallet — "Passbook" ledger design system
+   =========================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  --paper: #f4f3e8;
+  --paper-raised: #fbfaf3;
+  --stripe: #e8eee1;
+  --ink: #1f4d3a;
+  --ink-soft: #3a6552;
+  --ink-tint: #e4ebe3;
+  --brass: #a8792c;
+  --brass-tint: #f1e6cc;
+  --rust: #9b3a2c;
+  --rust-tint: #f3e0db;
+  --success: #2f6f4e;
+  --line: #c7c9ae;
+  --line-soft: #dbdbc9;
+  --text: #232821;
+  --text-muted: #6c7261;
+
+  --font-display: "Fraunces", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-body: "Inter", sans-serif;
+
+  --radius: 3px;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f3f4f6;
+  font-family: var(--font-body);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #fffef9 0%, var(--paper) 55%),
+    var(--paper);
+  color: var(--text);
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* subtle paper grain via layered gradient noise */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(31, 77, 58, 0.015) 0px,
+    rgba(31, 77, 58, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 0;
 }
 
 .container {
   max-width: 900px;
-  margin: 32px auto;
-  padding: 0 16px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+  position: relative;
+  z-index: 1;
 }
+
+/* ---------- Passbook cover / masthead ---------- */
 
 h1 {
   text-align: center;
-  margin-bottom: 24px;
+  margin: 0;
 }
+
+.masthead {
+  background: linear-gradient(155deg, var(--ink) 0%, #163d2d 100%);
+  color: var(--paper-raised);
+  margin: 0;
+  padding: 40px 20px 26px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  position: relative;
+}
+
+.masthead .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--brass-tint);
+  opacity: 0.85;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.masthead h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 34px;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.masthead .sub {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(251, 250, 243, 0.65);
+  margin-top: 8px;
+  letter-spacing: 0.04em;
+}
+
+/* perforation strip — signature detail separating the "cover" from the pages */
+.perforation {
+  height: 16px;
+  margin: 0 0 32px;
+  width: 100%;
+  box-sizing: border-box;
+  background-image: radial-gradient(
+    circle,
+    var(--paper) 5px,
+    transparent 5.5px
+  );
+  background-size: 22px 22px;
+  background-position: 11px center;
+  background-color: var(--ink);
+  position: relative;
+}
+
+/* ---------- Header (dashboard) ---------- */
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: linear-gradient(155deg, var(--ink) 0%, #163d2d 100%);
+  color: var(--paper-raised);
+  margin: 0;
+  padding: 26px 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+.header h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+  text-align: left;
+  letter-spacing: 0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
 }
+
+.header #logout-btn {
+  flex-shrink: 0;
+}
+
+.header h1::before {
+  content: "Ledger — ";
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass-tint);
+  display: block;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+
+/* ---------- Ledger pages (cards) ---------- */
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line-soft);
+  border-top: 3px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  margin-bottom: 22px;
+  box-shadow:
+    0 1px 2px rgba(35, 40, 33, 0.04),
+    0 8px 20px rgba(35, 40, 33, 0.03);
+  position: relative;
+}
+
+.card h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  margin: 0 0 18px;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+/* ---------- Forms ---------- */
 
 form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 label {
   display: flex;
   flex-direction: column;
-  font-size: 14px;
-  color: #374151;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  gap: 6px;
 }
 
-input {
-  margin-top: 4px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
+input,
+select {
+  font-family: var(--font-body);
+  margin-top: 0;
+  padding: 9px 4px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1.5px solid var(--line);
+  background: transparent;
+  font-size: 15px;
+  color: var(--text);
+  transition: border-color 0.15s ease;
 }
+
+input[type="number"],
+input[type="date"] {
+  font-family: var(--font-mono);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+input::placeholder {
+  color: #a6aa98;
+  font-family: var(--font-body);
+}
+
+select {
+  cursor: pointer;
+}
+
+/* ---------- Buttons — "rubber stamp" signature ---------- */
 
 button {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  font-size: 14px;
+  font-family: var(--font-mono);
+  padding: 11px 18px;
+  border-radius: 3px;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 4px;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 button:hover {
-  background: #1d4ed8;
+  background: var(--ink);
+  color: var(--paper-raised);
+  transform: rotate(-0.6deg);
+}
+
+button:active {
+  transform: rotate(-0.6deg) scale(0.98);
 }
 
 button.secondary {
-  background: #6b7280;
+  border-color: var(--brass);
+  color: var(--brass);
 }
 
 button.secondary:hover {
-  background: #4b5563;
+  background: var(--brass);
+  color: var(--paper-raised);
 }
 
 button.danger {
-  background: #dc2626;
+  border-color: var(--rust);
+  color: var(--rust);
 }
 
 button.danger:hover {
-  background: #b91c1c;
+  background: var(--rust);
+  color: var(--paper-raised);
 }
 
 button.small {
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 5px 9px;
+  font-size: 10.5px;
+  margin-top: 0;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px 16px;
+  gap: 16px 20px;
+  align-items: end;
 }
 
 .full-width {
   grid-column: 1 / -1;
 }
 
+/* ---------- Messages ---------- */
+
 .message {
-  font-size: 13px;
-  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  margin-top: 10px;
+  letter-spacing: 0.01em;
 }
 
 .message.success {
-  color: #059669;
+  color: var(--success);
+}
+
+.message.success::before {
+  content: "✓ ";
 }
 
 .message.error {
-  color: #dc2626;
+  color: var(--rust);
 }
+
+.message.error::before {
+  content: "✕ ";
+}
+
+/* ---------- Tables — passbook entry rows ---------- */
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13.5px;
+  margin-top: 4px;
+  font-family: var(--font-mono);
 }
 
-th, td {
-  padding: 8px;
-  border-bottom: 1px solid #e5e7eb;
+th,
+td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line-soft);
   text-align: left;
 }
 
 th {
-  background: #f9fafb;
+  background: var(--ink);
+  color: var(--paper-raised);
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+th:first-child {
+  border-top-left-radius: 2px;
+}
+th:last-child {
+  border-top-right-radius: 2px;
+}
+
+tbody tr:nth-child(even) {
+  background: var(--stripe);
+}
+
+tbody tr:hover {
+  background: var(--ink-tint);
+}
+
+/* ---------- Summary card — key figures ---------- */
+
+#summary-card p {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  margin: 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+#summary-card p:last-child {
+  border-bottom: none;
+  font-size: 18px;
+  color: var(--ink);
   font-weight: 600;
 }
 
+#summary-card strong {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  align-self: center;
+}
+
+#total-expenses {
+  color: var(--rust);
+}
+#total-income {
+  color: var(--success);
+}
+
+/* ---------- Auth pages (index.html) ---------- */
+
+.auth-wrap {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+.auth-wrap .card {
+  margin-bottom: 24px;
+}
+
+.divider-label {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: -8px 0 24px;
+}
+
+/* ---------- Chart wrappers ---------- */
+
+#chart-wrapper,
+.card canvas {
+  filter: none;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 600px) {
+  .masthead h1 {
+    font-size: 27px;
+  }
+  .header {
+    flex-direction: row;
+    padding: 20px 16px;
+  }
+  .header h1 {
+    font-size: 20px;
+  }
+  .card {
+    padding: 18px 16px;
+  }
+  table {
+    font-size: 12px;
+  }
+  th,
+  td {
+    padding: 8px 5px;
+  }
+}
+
+/* ---------- Accessibility: visible focus ---------- */
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+  button:hover {
+    transform: none;
+  }
+}
